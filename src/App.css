@@ -1,0 +1,39 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  --progress-bar-height: 100px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.monochrome {
+  filter: grayscale(100%);
+}
+
+.main-picture {
+  margin-top: var(--progress-bar-height);
+  border: 3px solid black;
+}
+
+.progress-bar {
+  position: fixed;
+  width: 100%;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  height: var(--progress-bar-height);
+  border-bottom: 3px solid black;
+}
+
+.progress-bar img {
+  height: var(--progress-bar-height);
+  width: calc(var(--progress-bar-height) / 2);
+}

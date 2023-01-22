@@ -1,47 +1,45 @@
 /* eslint-disable jsx-a11y/img-redundant-alt */
 import './App.css';
-import styled, { css } from 'styled-components';
-import { useState, useRef, useEffect } from 'react';
+import DropDown from './DropDown';
+import MainPicture from './MainPicture';
+import ProgressBar from './ProgressBar';
+import HighscoreForm from './HighscoreForm';
+import { useState, useEffect } from 'react';
 import wheresWally from './wheresWally.jpg';
 import wally from './wally.webp';
 import wilma from './wilma.webp';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, doc, getDoc } from "firebase/firestore";
 
-const { log } = console;
-
-const ProgressImage = ( { src, found } ) => {
-  return (
-    <img 
-    alt='Progress image'
-    src={src} 
-    className={found ? '' : 'monochrome'}
-    >
-    </img>
-  );
-}
-
-const ProgressBar = ( { srcs, characterFound } ) => {
-  return (
-    <div className='progress-bar'>
-      <ProgressImage src={srcs.wally} found={characterFound.wally}></ProgressImage>
-      <ProgressImage src={srcs.wilma} found={characterFound.wilma}></ProgressImage>
-    </div>
-  )
+const firebaseConfig = {
+  apiKey: "AIzaSyCBdNy-ja2pwbOJUXdeS9IVkTn5WZgWZlk",
+  authDomain: "wheres-wally-c8fb8.firebaseapp.com",
+  projectId: "wheres-wally-c8fb8",
+  storageBucket: "wheres-wally-c8fb8.appspot.com",
+  messagingSenderId: "1021758615269",
+  appId: "1:1021758615269:web:224decdacd2356e720ae0c"
 };
 
-const characterBoxes = {
-  wally: {
-    xMin: 0.62,
-    yMin: 0.69,
-    xMax: 0.635,
-    yMax: 0.725,
-  },
-  wilma: {
-    xMin: 0.785,
-    yMin: 0.256,
-    xMax: 0.801,
-    yMax: 0.29,
-  }
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const startTimestamp = +new Date();
+
+const submitHighscore = async ( { name, time } ) => {
+  const docRef = await addDoc(collection(db, "highscores"), {
+    name,
+    time,
+  });
+};
+
+const timeElapsedSinceStart = () => (
+  (+new Date() - startTimestamp) / 1000
+);
+
+const getCharacterBox = async (character) => {
+  const boxRef = doc(db, "character-boxes", character);
+  const boxSnap = await getDoc(boxRef);
+  return boxSnap.data();
+};
 
 const getBoundingRect = (ref) => ref.current.getBoundingClientRect();
 
@@ -58,63 +56,17 @@ const coordinatesInBox = ( { x, y, xMin, yMin, xMax, yMax } ) => {
   return xMin <= x && x <= xMax && yMin <= y && y <= yMax;
 };
 
-const DropDownContainer = styled.div`
-  ${( { visible } ) => (
-    visible ? 
-    css`
-      transform: scaleY(1);
-      transform-origin: top;
-      transition: transform 0.3s;
-    ` :
-    css`
-      transform: scaleY(0);
-      transform-origin: top;
-      transition: transform 0.3s;
-    `
-  )}
-  display: flex;
-  flex-direction: column;
-  z-index: 1;
-  position: absolute;
-  ${( { coordinates } ) => coordinates && css`
-    top: ${coordinates.y}px;
-    left: ${coordinates.x}px;  
-  `}
-`;
-
-const DropDown = ( { coordinates, visible, handleClose, handleChoice } ) => {
-  return (
-    <DropDownContainer coordinates={coordinates} visible={visible}>
-      <button onClick={handleClose}>X</button>
-      <button onClick={() => handleChoice('wally')}>Wally</button>
-      <button onClick={() => handleChoice('wilma')}>Wilma</button>
-    </DropDownContainer>
-  )
-};
-
-const MainPicture = ( { src, onClick } ) => {
-  //onClick = ( { clickEvent, ref } ) => ...
-  const ref = useRef(null);
-  return (
-    <img 
-    alt='Main picture'
-    src={src} 
-    ref={ref} 
-    onClick={(e) => {onClick( { clickEvent: e, ref } )}} 
-    className='main-picture'
-    >
-    </img>
-  );
-};
-
-function App() {
+const App = () => {
   const [dropDownVisible, setDropDownVisible] = useState(false);
+  const [highscoreFormVisible, setHighscoreFormVisible] = useState(false);
+  const [timeTaken, setTimeTaken] = useState(null);
   const [characterFound, setCharacterFound] = useState({
     wally: false,
     wilma: false,
   });
   const [lastClickCoordinates, setLastClickCoordinates] = useState(null);
   const [lastRelativeClickCoordinates, setLastRelativeClickCoordinates] = useState(null);
+  
   const handleMainPictureClick = ( { clickEvent, ref } ) => {
     const viewportRelativeCoordinates = { x: clickEvent.clientX, y: clickEvent.clientY };
     const absoluteCoordinates = { x: clickEvent.pageX, y: clickEvent.pageY };
@@ -124,18 +76,10 @@ function App() {
     setLastClickCoordinates(absoluteCoordinates);
   };
   
-  useEffect(
-    () => {
-      if (lastClickCoordinates) {
-        setDropDownVisible(true)
-      }
-    },
-    [lastClickCoordinates]
-  );
-  
-  const handleChoice = (choice) => {
+  const handleChoice = async (choice) => {
+    const characterBox = await getCharacterBox(choice);
     if (coordinatesInBox({ 
-      ...lastRelativeClickCoordinates, ...characterBoxes[choice]
+      ...lastRelativeClickCoordinates, ...characterBox
     })) {
       setCharacterFound({
         ...characterFound,
@@ -145,8 +89,31 @@ function App() {
     setDropDownVisible(false);
   }
 
+  const handleHighscoreFormClose = () => {
+    setHighscoreFormVisible(false);
+  };
+
+  useEffect(
+    () => {
+      if (lastClickCoordinates) {
+        setDropDownVisible(true)
+      }
+    },
+    [lastClickCoordinates]
+  );
+  
+  useEffect(
+    () => {
+      if (Object.values(characterFound).every((isFound) => isFound)) {
+        setTimeTaken(timeElapsedSinceStart());
+        setHighscoreFormVisible(true);
+      }
+    },
+    [characterFound]
+  )
+
   return (
-    <div class='app'>
+    <div className='app'>
       <ProgressBar
       srcs = {({wally, wilma})}
       characterFound={characterFound}
@@ -154,7 +121,8 @@ function App() {
       </ProgressBar>
       <MainPicture 
       src={wheresWally}
-      onClick={handleMainPictureClick}>
+      onClick={handleMainPictureClick}
+      >
       </MainPicture>
       <DropDown
       coordinates={lastClickCoordinates}
@@ -163,6 +131,13 @@ function App() {
       handleChoice={handleChoice}
       >
       </DropDown>
+      <HighscoreForm
+      visible={highscoreFormVisible}
+      time={timeTaken}
+      submitHighscore={submitHighscore}
+      handleClose={handleHighscoreFormClose}
+      >
+      </HighscoreForm>
     </div>
   );
 }

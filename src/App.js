@@ -4,12 +4,17 @@ import DropDown from './DropDown';
 import MainPicture from './MainPicture';
 import ProgressBar from './ProgressBar';
 import HighscoreForm from './HighscoreForm';
+import HighScores from './Highscores';
 import { useState, useEffect } from 'react';
 import wheresWally from './wheresWally.jpg';
 import wally from './wally.webp';
 import wilma from './wilma.webp';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, query, orderBy, limit } from "firebase/firestore";
+
+const pipe = (...functions) => {
+  return functions.reduce((f, g) => (x) => f(g(x)));
+};
 
 const firebaseConfig = {
   apiKey: "AIzaSyCBdNy-ja2pwbOJUXdeS9IVkTn5WZgWZlk",
@@ -22,10 +27,20 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const highscoresRef = collection(db, 'highscores');
+const topHighscoresQuery = query(highscoresRef, orderBy('time', 'asc'), limit(10));
+
 const startTimestamp = +new Date();
 
+const getTopHighscores = async () => {
+  const querySnapshot = await getDocs(topHighscoresQuery);
+  const topHighscores = [];
+  querySnapshot.forEach((doc) => topHighscores.push(doc.data()));
+  return topHighscores;
+};
+
 const submitHighscore = async ( { name, time } ) => {
-  const docRef = await addDoc(collection(db, "highscores"), {
+  const docRef = await addDoc(highscoresRef, {
     name,
     time,
   });
@@ -59,6 +74,7 @@ const coordinatesInBox = ( { x, y, xMin, yMin, xMax, yMax } ) => {
 const App = () => {
   const [dropDownVisible, setDropDownVisible] = useState(false);
   const [highscoreFormVisible, setHighscoreFormVisible] = useState(false);
+  const [highscoresVisible, setHighscoresVisible] = useState(false);
   const [timeTaken, setTimeTaken] = useState(null);
   const [characterFound, setCharacterFound] = useState({
     wally: false,
@@ -88,6 +104,11 @@ const App = () => {
     }
     setDropDownVisible(false);
   }
+
+  const handleSubmitHighscore = ( { name, time } ) => {
+    submitHighscore( { name, time } );
+    setHighscoresVisible(false);
+  };
 
   const handleHighscoreFormClose = () => {
     setHighscoreFormVisible(false);
@@ -134,10 +155,21 @@ const App = () => {
       <HighscoreForm
       visible={highscoreFormVisible}
       time={timeTaken}
-      submitHighscore={submitHighscore}
+      submitHighscore={handleSubmitHighscore}
       handleClose={handleHighscoreFormClose}
       >
       </HighscoreForm>
+      <button 
+      onClick={() => setHighscoresVisible(true)}
+      className='show-highscores-button'
+      >
+        Show Highscores
+      </button>
+      <HighScores 
+      getTopHighscores={getTopHighscores}
+      visible={highscoresVisible}
+      handleClose={() => setHighscoresVisible(false)}
+      ></HighScores>
     </div>
   );
 }

@@ -7,8 +7,10 @@ import HighscoreForm from './HighscoreForm';
 import HighScores from './Highscores';
 import { useState, useEffect } from 'react';
 import wheresWally from './wheresWally.jpg';
+import wheresWallyHint from './wheresWallyHint.jpg';
 import wally from './wally.webp';
 import wilma from './wilma.webp';
+import ring from './ring.svg';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, query, orderBy, limit } from "firebase/firestore";
 
@@ -53,6 +55,7 @@ const timeElapsedSinceStart = () => (
 const getCharacterBox = async (character) => {
   const boxRef = doc(db, "character-boxes", character);
   const boxSnap = await getDoc(boxRef);
+  console.log(boxSnap.data())
   return boxSnap.data();
 };
 
@@ -75,6 +78,7 @@ const App = () => {
   const [dropDownVisible, setDropDownVisible] = useState(false);
   const [highscoreFormVisible, setHighscoreFormVisible] = useState(false);
   const [highscoresVisible, setHighscoresVisible] = useState(false);
+  const [hintVisible, setHintVisible] = useState(false);
   const [timeTaken, setTimeTaken] = useState(null);
   const [characterFound, setCharacterFound] = useState({
     wally: false,
@@ -92,6 +96,10 @@ const App = () => {
     setLastClickCoordinates(absoluteCoordinates);
   };
   
+  const toggleHintVisible = () => {
+    setHintVisible(!hintVisible);
+  };
+
   const handleChoice = async (choice) => {
     const characterBox = await getCharacterBox(choice);
     if (coordinatesInBox({ 
@@ -103,7 +111,7 @@ const App = () => {
       })
     }
     setDropDownVisible(false);
-  }
+  };
 
   const handleSubmitHighscore = ( { name, time } ) => {
     submitHighscore( { name, time } );
@@ -141,7 +149,7 @@ const App = () => {
       >
       </ProgressBar>
       <MainPicture 
-      src={wheresWally}
+      src={hintVisible ? wheresWallyHint : wheresWally}
       onClick={handleMainPictureClick}
       >
       </MainPicture>
@@ -159,12 +167,17 @@ const App = () => {
       handleClose={handleHighscoreFormClose}
       >
       </HighscoreForm>
-      <button 
-      onClick={() => setHighscoresVisible(true)}
-      className='show-highscores-button'
-      >
-        Show Highscores
-      </button>
+      <div class="footer-buttons">
+        <button
+        onClick={() => setHighscoresVisible(true)}
+        className='show-highscores-button'
+        >
+          Show Highscores
+        </button>
+        <button onClick={toggleHintVisible}>
+          {hintVisible ? 'Hide hint' : 'Show hint'}
+        </button>
+      </div>
       <HighScores 
       getTopHighscores={getTopHighscores}
       visible={highscoresVisible}

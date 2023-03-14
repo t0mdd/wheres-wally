@@ -64,17 +64,22 @@
   background-color: red;
 }
 
-.show-highscores-button, .submit-highscores-button {
+.footer-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-buttons button, .submit-highscores-button {
   border: 3px solid black;
   background-color: white;
   padding: 0.2rem;
 }
 
-.show-highscores-button:hover, .submit-highscores-button:hover {
+.footer-buttons button:hover, .submit-highscores-button:hover {
   background-color: rgb(209, 223, 252);
 }
 
-.show-highscores-button:active, .submit-highscores-button:active {
+.footer-buttons button:active, .submit-highscores-button:active {
   background-color: rgb(227, 236, 255);
 }
 

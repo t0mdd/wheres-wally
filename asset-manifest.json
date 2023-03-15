@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/wheres-wally/static/css/main.f451727b.css",
+    "main.js": "/wheres-wally/static/js/main.e5985c21.js",
+    "static/media/wheresWally.jpg": "/wheres-wally/static/media/wheresWally.0e005bb79d71d265bdd3.jpg",
+    "static/media/wheresWallyHint.jpg": "/wheres-wally/static/media/wheresWallyHint.ee93143e27b60d8378a8.jpg",
+    "static/media/wilma.webp": "/wheres-wally/static/media/wilma.b987c50ab12b093c23b2.webp",
+    "static/media/wally.webp": "/wheres-wally/static/media/wally.b070b08cd7ef1dd88254.webp",
+    "static/media/ring.svg": "/wheres-wally/static/media/ring.3141856b5c171aee1b177998c244ad78.svg",
+    "index.html": "/wheres-wally/index.html",
+    "main.f451727b.css.map": "/wheres-wally/static/css/main.f451727b.css.map",
+    "main.e5985c21.js.map": "/wheres-wally/static/js/main.e5985c21.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f451727b.css",
+    "static/js/main.e5985c21.js"
+  ]
+}
